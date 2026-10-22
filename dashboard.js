@@ -74,27 +74,79 @@ function makeIssueCard(issue) {
     image.className = 'issue-image';
     card.append(image);
   }
+  if (pageRole === 'admin') {
+    card.append(element('p', 'issue-reporter', `Reported by ${issue.studentName || 'Student'}`));
+    const controls = element('div', 'status-controls');
+    const select = document.createElement('select');
+    select.setAttribute('aria-label', `Status for ${issue.title}`);
+    for (const optionStatus of ['Reported', 'In Progress', 'Resolved']) {
+      const option = element('option', '', optionStatus);
+      option.value = optionStatus;
+      option.selected = optionStatus === status;
+      select.append(option);
+    }
+    const saveButton = element('button', 'button small-button', 'Save status');
+    saveButton.type = 'button';
+    saveButton.addEventListener('click', () => updateStatus(issue._id, select.value, saveButton));
+    controls.append(select, saveButton);
+    card.append(controls);
+  }
   return card;
 }
 
-async function loadIssues() {
-  if (!issueList) return;
-  issueList.replaceChildren(element('p', 'muted', 'Loading your reports…'));
+function updateStats(issues) {
+  const total = document.getElementById('totalCount');
+  const reported = document.getElementById('reportedCount');
+  const progress = document.getElementById('progressCount');
+  const resolved = document.getElementById('resolvedCount');
+  if (total) total.textContent = issues.length;
+  if (reported) reported.textContent = issues.filter((i) => i.status === 'Reported').length;
+  if (progress) progress.textContent = issues.filter((i) => i.status === 'In Progress').length;
+  if (resolved) resolved.textContent = issues.filter((i) => i.status === 'Resolved').length;
+}
+
+async function updateStatus(id, status, button) {
+  button.disabled = true;
+  showMessage('');
   try {
-    const response = await fetch('/api/student/issues');
+    const response = await fetch(`/api/admin/issues/${encodeURIComponent(id)}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'Could not update status.');
+    showMessage('Issue status updated.', 'success');
+    await loadIssues();
+  } catch (error) {
+    showMessage(error.message || 'Could not update status.');
+  } finally {
+    button.disabled = false;
+  }
+}
+
+async function loadIssues() {
+  const loadingText = pageRole === 'admin' ? 'Loading issues…' : 'Loading your reports…';
+  issueList.replaceChildren(element('p', 'muted', loadingText));
+  try {
+    const endpoint = pageRole === 'admin' ? '/api/admin/issues' : '/api/student/issues';
+    const response = await fetch(endpoint);
     if (response.status === 401) {
       window.location.replace('/');
       return;
     }
     const issues = await response.json();
-    if (!response.ok) throw new Error(issues.message || 'Could not load your reports.');
+    if (!response.ok) throw new Error(issues.message || (pageRole === 'admin' ? 'Could not load issues.' : 'Could not load your reports.'));
     issueList.replaceChildren();
     if (!issues.length) {
-      issueList.append(element('p', 'muted empty-state', 'You have not submitted any reports yet.'));
+      const emptyText = pageRole === 'admin' ? 'No issues have been reported yet.' : 'You have not submitted any reports yet.';
+      issueList.append(element('p', 'muted empty-state', emptyText));
     }
     for (const issue of issues) issueList.append(makeIssueCard(issue));
+    if (pageRole === 'admin') updateStats(issues);
   } catch (error) {
-    issueList.replaceChildren(element('p', 'message error', error.message || 'Could not load your reports.'));
+    const defaultErr = pageRole === 'admin' ? 'Could not load issues.' : 'Could not load your reports.';
+    issueList.replaceChildren(element('p', 'message error', error.message || defaultErr));
   }
 }
 
