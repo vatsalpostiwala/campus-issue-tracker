@@ -6,7 +6,7 @@ Students frequently encounter campus maintenance problems—such as broken class
 
 ## Objectives
 
-- Enable students to register securely, report campus maintenance problems with optional photo attachments, and track the status of their reports.
+- Enable students to register securely with an official `@sitpune.edu.in` email, report campus maintenance problems with optional photo attachments, and track the status of their reports.
 - Provide administrators with a protected management workspace to inspect student issues, attached photographs, and reporter details.
 - Allow administrators to transition issue statuses across Reported, In Progress, and Resolved with immediate count recalculation.
 - Implement role-based access control protecting student and administrative pages and API endpoints.

@@ -66,7 +66,7 @@ Open `.env` in any text editor and configure:
 - `PORT`: Server port (default: `3000`).
 - `MONGO_URI`: MongoDB connection string (default: `mongodb://127.0.0.1:27017`).
 - `SESSION_SECRET`: A secure random secret string of at least 32 characters.
-- `ADMIN_EMAIL`: Email for the administrator account (e.g. `admin@campus.edu`).
+- `ADMIN_EMAIL`: College-domain email for the administrator account (must end in `@sitpune.edu.in`).
 - `ADMIN_PASSWORD`: Administrator password of at least 8 characters.
 
 > Note: `.env` is ignored by Git. Never commit production secrets or real passwords to version control.
@@ -95,7 +95,7 @@ http://localhost:3000
 
 ### Student Workflow
 1. Navigate to `http://localhost:3000` and click **Create an account** (or visit `/signup.html`).
-2. Fill in your name, email, and password (minimum 8 characters) to register. Public registrations are automatically assigned the `student` role.
+2. Fill in your name, college email ending in `@sitpune.edu.in`, and password (minimum 8 characters) to register. Public registrations are automatically assigned the `student` role.
 3. Sign in at `index.html`. You are directed to `/student.html`.
 4. In the **Report a problem** form, submit an issue:
    - **Title**: 3 to 100 characters.
@@ -107,7 +107,7 @@ http://localhost:3000
 6. Click **Refresh** at any time to check for status changes made by administrators.
 
 ### Administrator Workflow
-1. Sign in at `index.html` using the `ADMIN_EMAIL` and `ADMIN_PASSWORD` credentials configured in your `.env` file.
+1. Sign in at `index.html` using the college-domain `ADMIN_EMAIL` and `ADMIN_PASSWORD` credentials configured in your `.env` file.
 2. The server automatically routes administrators to `/admin.html`.
 3. In the admin workspace, you will see:
    - **Status summary cards**: Real-time totals for Total reports, Reported, In progress, and Resolved.
@@ -120,8 +120,8 @@ http://localhost:3000
 - Both students and administrators can click **My Profile** in the top navigation bar to access `/profile.html`.
 - Users can update their display name and change their password by verifying their current password.
 
-### Sample Seed Data
-- When the server starts for the first time with an empty `issues` collection, it automatically seeds 3 sample reports (one Reported, one In Progress, and one Resolved) so administrators can immediately view reports and verify counts.
+### Clean Initial Data
+- The application does not create sample issue reports. The reports list and dashboard counts start empty until students submit real reports.
 
 ---
 

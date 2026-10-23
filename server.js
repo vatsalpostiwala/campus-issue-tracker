@@ -81,6 +81,10 @@ function validEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+function validCollegeEmail(email) {
+  return validEmail(email) && email.endsWith('@sitpune.edu.in');
+}
+
 function publicUser(user) {
   return { id: user._id.toString(), name: user.name, email: user.email, role: user.role };
 }
@@ -92,7 +96,7 @@ app.post('/api/auth/signup', async (req, res) => {
     const email = clean(body.email).toLowerCase();
     const password = typeof body.password === 'string' ? body.password : '';
     if (name.length < 2 || name.length > 60) return res.status(400).json({ message: 'Name must be between 2 and 60 characters.' });
-    if (!validEmail(email) || email.length > 120) return res.status(400).json({ message: 'Enter a valid email address.' });
+    if (!validCollegeEmail(email) || email.length > 120) return res.status(400).json({ message: 'Use your college email ending in @sitpune.edu.in.' });
     if (password.length < 8 || password.length > 72) return res.status(400).json({ message: 'Password must be at least 8 characters.' });
     if (await users.findOne({ email })) return res.status(409).json({ message: 'An account with this email already exists.' });
 
@@ -110,7 +114,7 @@ app.post('/api/auth/login', async (req, res) => {
     const body = req.body || {};
     const email = clean(body.email).toLowerCase();
     const password = typeof body.password === 'string' ? body.password : '';
-    if (!validEmail(email) || !password) return res.status(400).json({ message: 'Enter your email and password.' });
+    if (!validCollegeEmail(email) || !password) return res.status(400).json({ message: 'Use your college email ending in @sitpune.edu.in and enter your password.' });
     const user = await users.findOne({ email });
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       return res.status(401).json({ message: 'Email or password is incorrect.' });
@@ -404,18 +408,10 @@ async function start() {
   issues = db.collection('issues');
   await users.createIndex({ email: 1 }, { unique: true });
 
-  if (await issues.countDocuments() === 0) {
-    await issues.insertMany([
-      { title: 'Projector not working in Room 204', category: 'Classroom', location: 'Academic Block B', description: 'The HDMI cable is broken and the display turns off repeatedly.', status: 'In Progress', studentName: 'Demo Student', createdAt: new Date() },
-      { title: 'Wi-Fi disconnected in Central Library', category: 'IT / Internet', location: 'Library 2nd Floor', description: 'Students cannot access the internet in the quiet study area.', status: 'Reported', studentName: 'Demo Student', createdAt: new Date() },
-      { title: 'Water cooler leaking near stairs', category: 'Hostel / Facilities', location: 'Hostel 1 Ground Floor', description: 'Water is spilling onto the corridor floor and making it slippery.', status: 'Resolved', studentName: 'Demo Student', createdAt: new Date() }
-    ]);
-  }
-
   // Create the admin account from local .env values; admins cannot self-register.
   const adminEmail = clean(process.env.ADMIN_EMAIL).toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || '';
-  if (adminEmail && validEmail(adminEmail) && adminPassword.length >= 8) {
+  if (adminEmail && validCollegeEmail(adminEmail) && adminPassword.length >= 8) {
     await users.updateOne(
       { email: adminEmail },
       { $setOnInsert: { name: 'Campus Admin', email: adminEmail, role: 'admin', passwordHash: await bcrypt.hash(adminPassword, 10), createdAt: new Date() } },
