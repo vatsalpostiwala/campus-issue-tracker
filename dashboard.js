@@ -4,6 +4,7 @@ const issueList = document.getElementById('issuesList');
 const issueForm = document.getElementById('issueForm');
 const maximumImageSize = 2 * 1024 * 1024;
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+let currentUserName = '';
 
 function showMessage(text, kind = 'error') {
   if (!messageBox) return;
@@ -31,6 +32,7 @@ async function checkAccess() {
     return false;
   }
   const welcome = document.getElementById('welcomeName');
+  currentUserName = user.name;
   if (welcome) welcome.textContent = `Hello, ${user.name}`;
   return true;
 }
@@ -62,6 +64,15 @@ function makeIssueCard(issue) {
   heading.append(element('span', `status-badge status-${statusClass}`, status));
   card.append(heading);
   card.append(element('p', 'issue-meta', `${issue.category} · ${issue.location}`));
+  if (pageRole === 'student') {
+    const reporterName = issue.isMine ? currentUserName : (issue.studentName || 'Student');
+    const reporterLabel = issue.isMine
+      ? `Your report - Reported by ${reporterName}`
+      : `Reported by ${reporterName}`;
+    card.append(element('p', 'issue-reporter', reporterLabel));
+  } else if (pageRole === 'admin') {
+    card.append(element('p', 'issue-reporter', `Reported by ${issue.studentName || 'Student'}`));
+  }
   card.append(element('p', 'issue-description', issue.description));
   if (issue.createdAt) {
     const date = new Date(issue.createdAt);
@@ -75,7 +86,6 @@ function makeIssueCard(issue) {
     card.append(image);
   }
   if (pageRole === 'admin') {
-    card.append(element('p', 'issue-reporter', `Reported by ${issue.studentName || 'Student'}`));
     const controls = element('div', 'status-controls');
     const select = document.createElement('select');
     select.setAttribute('aria-label', `Status for ${issue.title}`);
@@ -126,7 +136,7 @@ async function updateStatus(id, status, button) {
 }
 
 async function loadIssues() {
-  const loadingText = pageRole === 'admin' ? 'Loading issues…' : 'Loading your reports…';
+  const loadingText = pageRole === 'admin' ? 'Loading issues…' : 'Loading campus reports…';
   issueList.replaceChildren(element('p', 'muted', loadingText));
   try {
     const endpoint = pageRole === 'admin' ? '/api/admin/issues' : '/api/student/issues';
@@ -136,16 +146,16 @@ async function loadIssues() {
       return;
     }
     const issues = await response.json();
-    if (!response.ok) throw new Error(issues.message || (pageRole === 'admin' ? 'Could not load issues.' : 'Could not load your reports.'));
+    if (!response.ok) throw new Error(issues.message || (pageRole === 'admin' ? 'Could not load issues.' : 'Could not load campus reports.'));
     issueList.replaceChildren();
     if (!issues.length) {
-      const emptyText = pageRole === 'admin' ? 'No issues have been reported yet.' : 'You have not submitted any reports yet.';
+      const emptyText = 'No issues have been reported yet.';
       issueList.append(element('p', 'muted empty-state', emptyText));
     }
     for (const issue of issues) issueList.append(makeIssueCard(issue));
     if (pageRole === 'admin') updateStats(issues);
   } catch (error) {
-    const defaultErr = pageRole === 'admin' ? 'Could not load issues.' : 'Could not load your reports.';
+    const defaultErr = pageRole === 'admin' ? 'Could not load issues.' : 'Could not load campus reports.';
     issueList.replaceChildren(element('p', 'message error', error.message || defaultErr));
   }
 }

@@ -103,8 +103,8 @@ http://localhost:3000
    - **Location**: Building and room (2 to 100 characters).
    - **Description**: Detailed explanation (10 to 1000 characters).
    - **Photo attachment (optional)**: JPEG, PNG, or WebP up to 2 MB.
-5. Submitted issues appear immediately in the **My reported issues** list with status badges (`Reported`, `In Progress`, or `Resolved`).
-6. Click **Refresh** at any time to check for status changes made by administrators.
+5. All students can see the shared campus report list, including who submitted each report. Your own report is labeled **Your report**. This helps students notice an existing issue before reporting it again.
+6. Click **Refresh** at any time to check for new reports and status changes made by administrators.
 
 ### Administrator Workflow
 1. Sign in at `index.html` using the college-domain `ADMIN_EMAIL` and `ADMIN_PASSWORD` credentials configured in your `.env` file.

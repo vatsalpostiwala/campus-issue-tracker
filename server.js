@@ -228,7 +228,7 @@ async function imageMatchesFile(file) {
 
 app.get('/api/student/issues', requireRole('student'), async (req, res) => {
   try {
-    const records = await issues.find({ studentId: req.session.user.id }).sort({ createdAt: -1 }).toArray();
+    const records = await issues.find().sort({ createdAt: -1 }).toArray();
     res.json(records.map((issue) => ({
       _id: issue._id.toString(),
       title: issue.title,
@@ -237,11 +237,13 @@ app.get('/api/student/issues', requireRole('student'), async (req, res) => {
       description: issue.description,
       status: issue.status,
       imageUrl: issue.imageUrl,
-      createdAt: issue.createdAt
+      createdAt: issue.createdAt,
+      studentName: issue.studentName || 'Student',
+      isMine: issue.studentId === req.session.user.id
     })));
   } catch (error) {
     console.error('Student issue list error:', error.message);
-    res.status(500).json({ message: 'Could not load your reports.' });
+    res.status(500).json({ message: 'Could not load campus reports.' });
   }
 });
 
